@@ -1,0 +1,715 @@
+---
+title: Correlación entre el porcentaje de crecimiento de la población y el porcentaje
+  de crecimiento de las áreas urbanas en los municipios de Oaxaca. Estudio de caso
+  segun los datos del censo nacional de población y vivienda de 2010 y 2020.
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+### 1. Introducción
+
+Este trabajo busca averiguar a través de un estudio de caso si el aumento en la población tiene una relación con el cambio en el área urbana en los municipios del estado de Oaxaca comparando los datos del censo nacional de población y vivienda de 2010 y 2020 y sus marcos geo-estadísticos correspondientes, con el fin de llegar a crear un modelo estadístico que sintetice esta información.
+
+Según datos de la CONAPO (2020) la tasa de crecimiento natural de México en 2020 es de 1.08%, y esta tendencia positiva se ha mantenido durante la historia contemporánea del país. Esto nos lleva a preguntarnos qué otras variables podrían estar relacionadas a este crecimiento poblacional, es decir, qué otros fenómenos podemos llegar a explicar a través del crecimiento de la población.
+
+Por otro lado, el crecimiento del área urbana en México es una de las variables que ha estado siempre relacionada al aumento poblacional, puesto que durante las pasadas décadas el país ha sufrido una transformación estructural que movilizó a muchas poblaciones rurales a las ciudades por todo el territorio nacional. El abandono del campo y la crisis del mundo rural en México son temas relevantes en el panorama actual del país. Según datos del Banco Mundial (2019), el crecimiento de la población urbana en 2019 en México fue de 1.45% y aunque ha ido en decremento con respecto a décadas anteriores se mantiene en números positivos.
+
+Estos dos datos nos dan ya un buen número de posibles preguntas, pero en concreto mi interés está en saber si el crecimiento del área urbana depende del crecimiento de la población.
+
+#### 1.1. Hipótesis
+
+Por lo explicado anteriormente, mi hipótesis es que existe una correlación lineal entre el crecimiento de la población y el cambio en el área urbana. Donde la variable independiente es el crecimiento poblacional y la variable independientes es el cambio en el area urbana.
+
+#### 1.2. Objetivos y preguntas de investigación
+
+El objetivo de este trabajo es aplicar los conocimientos obtenidos durante curso de Métodos Cuantitativos de la UAM-I, a un caso de estudio concreto y real -el de el Estado de Oaxaca- que permita reforzar el conocimiento adquirido y demostrar la capacidad de diseño y realización de un ejercicio de investigación.
+
+En este trabajo aplicaremos estos temas a un ejercicio que intenta responder las siguientes preguntas: ¿Qué relación existe entre el crecimiento de la población y el crecimiento del área urbana? ¿Existe una correlación lineal entre estas dos variables? Y sí existiera esta relación ¿Podemos crear un modelo que prediga el cambio?
+
+#### 1.3. Metodología
+
+Para determinar si esta correlación existe o no haremos uso de herramientas estadísticas y geográficas que nos permitan explorar nuestros datos y hacer los cálculos correspondientes.
+
+El trabajo constará de diversas fases que nos llevarán a la comprobación de la hipótesis:
+
+* Obtención de los datos de la página oficial de INEGI.
+
+* Creación de la muestra a partir de los datos de nuestro caso de estudio.
+
+* Análisis exploratorio de los datos extraídos de las fuentes oficiales.
+
+* Construcción del DataFrame con los datos necesarios para comprobar si hay correlación entre variables
+
+* Transformación de ambas variables en porcentajes calculando el cambio con respecto al 2010 usando los nuevos datos de 2020
+
+* Análisis exploratorio del nuevo DataFrame.
+
+* Cálculo del coeficiente de correlación de Pearson entre ambas variables.
+
+* Construcción de un modelo de regresión lineal que sea capaz de predecir el cambio de una variable conforme a otra.
+
+* Medición del error del modelo para saber sí este es válido o no.
+
+### 2. Procedimiento
+
+#### 2.1. Exploración y obtención de los datos disponibles, construcción de la muestra y preparación del ambiente de trabajo.
+
+Los datos con los que he decidido trabajar y en parte los que me motivaron a realizar este trabajo en particular son los nuevos datos del censo nacional de población y vivienda de 2020 recientemente publicados por INEGI, los cuales son accesibles a traves de su portal web. (INEGI, 2010; 2021)
+
+Para nuestro caso en especifico utilizamos los datos ligados al censo del marco geo-estadístico nacional de 2020 y 2010 ya que nos proporcionan los polígonos del área que INEGI considera como urbana por municipio (INEGI, 2010; 2021).
+
+Los datos de población obtenidos se encuentran en formato CSV y los del marco geo-estadístico en formato SHP, por lo que es importante pasarlos ambos a el mismo formato para que estos sean mas accesibles para este trabajo. En este caso decidí usar una base de datos de tipo GeoPackage, la cual tiene la ventaja de estar construida sobre una base relacional de tipo SQLite. De este modo, esta es fácilmente modificable y se puede compartir rápidamente, además de admitir datos geográficos, lo que posibilita la unión de las tablas CSV de los censos con los SHP's del marco geo-estadístico.
+
+##### 2.1.1. Exploración de los datos disponibles del censo de 2010 y 2020.
+
+Una vez descargados los datos y unido las tablas CSV a una capa vectorial de municipios, exploramos los datos para ver si estos están completos y comenzar a inferir si nos permitirán responder a las preguntas de investigación.
+
+Esta primera exploración la realizamos de forma visual con el uso de el programa QGIS, con el que se pudo comprobar de forma rápida si existía una diferencia entre las áreas urbanas de 2010 y las de 2020.
+
+![Fuente: Elaboración propia](/Users/sebastiangm/OneDrive/Trabajo/UAM/workspace/MQI/Rmarckdown/Mapa Recu.png){#id .class width=50% height=50%}
+
+Una vez obtenidos los datos y uniformizados los formatos con los cuales vamos a trabajar procedemos a la visualización gráfica de los datos y diseño de la muestra con la que trabajaremos.
+
+##### 2.1.2. Diseño de la muestra
+
+Al ser este un estudio de caso nos centraremos en los datos por municipio del estado de Oaxaca, así que para la creación de nuestra muestra  tenemos de seleccionar los datos que cumplan con los siguientes criterios:
+
+* Los datos deben ser del área de nuestro caso de estudio, en este caso Oaxaca
+
+* Los datos deben hacer referencia a las variables que nos interesan y estar disponibles por municipio
+
+* Los datos deben ser comparables entre sí y describir el mismo fenómeno en 2010 que en 2020
+
+La muestra de nuestros datos será entonces de 590 registros que hacen referencia a los 590 municipios del estado de Oaxaca separados en las diferentes tablas que se han creado con los datos que descargamos estas son las siguientes:
+
+* Archivo vectorial con los datos de población de ambos censos (2010 y 2020) por municipios
+
+* Archivo vectorial con los polígonos y el área total urbana por municipio del marco geo-estadístico de 2010
+
+* Archivo vectorial con los polígonos y el área total urbana por municipio del marco geo-estadístico de 2020
+
+
+##### 2.1.3. Construcción del ambiente de trabajo
+
+**Construcción del ambiente de trabajo y conexión a la base de datos**
+
+```{r}
+#Agregar el directorio de trabajo ¡CAMBIAR A DONDE TENGAN ALMACENADOS LOS DATOS!
+setwd("~/OneDrive/Trabajo/UAM/workspace/MQI")
+
+#Cargar las librerias necesarias
+
+#Conexiones a SQLite
+library(RSQLite)
+library(DBI)
+
+#Cálculos estadistícos y matemáticos
+library(pastecs)
+library(tidyr)
+library(psych)
+library(MASS)
+library(dplyr)
+```
+
+**Conexión a la base de datos SQLite dentro del GeoPackage**
+
+```{r}
+#Conexión a la base de datos sqlite que esta dentro del GeoPackage
+con <- dbConnect(RSQLite::SQLite(),dbname = "datosMQI_recuUAM.gpkg", ":memory:")
+```
+
+#### 2.2. Visualización y exploración de los datos
+
+La visualización de datos es una representación gráfica de la información y los datos. Mediante el uso de elementos visuales, como gráficos y mapas, la visualización de datos ofrece una manera accesible para detectar y comprender las tendencias y los patrones en los datos.
+
+Es este caso nos interesa saber si la distribución de nuestras variables tiene una forma similar, lo que nos daría un primer indicio de si nuestras variables están correlacionadas o no.
+
+##### 2.2.1 Datos de población por municipio en Oaxaca del censo nacional (INEGI) de 2010 y 2020
+
+**Visualizar los datos necesarios comenzar el análisis de nuestras variables**
+
+```{r}
+#Definimos la variable que alojará los datos de la poblacián por municipio del censo de 2010
+pobMunOax10 <- dbGetQuery(con,"SELECT pobtot2010  FROM oax_pobtotmun")
+
+#Definimos la variable que alojará los datos de la población por municipio del censo de 2010
+pobMunOax20 <- dbGetQuery(con,"SELECT pobtot2020 FROM oax_pobtotmun")
+
+#Visualizamos los datos para ver si estos son correctos o no.
+head(pobMunOax10)
+head(pobMunOax20)
+```
+
+**Calculamos los valores estadisticos descriptivos básicos para ambos DataFrames**
+
+```{r}
+#Llamamos a la función summary() para calcular los valores de la población total por municipio en 2010.
+summary(pobMunOax10)
+```
+
+```{r}
+#Llamamos a la función summary() para calcular los valores de la población total por municipio en 2020.
+summary(pobMunOax20)
+```
+
+**Visualizamos los valores de los datos con histogramas para ver su tipo de distrubición.**
+
+```{r}
+#Histograma de distribución de la tabla población total por municipio en 2010
+hist(x = pobMunOax10$pobtot2010, main = "Población por Municipio en Oaxaca 2010", 
+     xlab = "Población", ylab = "Frecuencia",
+     col = "blue")
+```
+
+```{r}
+#Histograma de distribución de la tabla población total por municipio en 2020
+hist(x = pobMunOax20$pobtot2020, main = "Población por Municipio en Oaxaca 2020", 
+     xlab = "Población", ylab = "Frecuencia",
+     col = "black")
+```
+
+**Interpretación de los datos de población por municipio de 2010 y 2020**
+
+Nuestros gráficos de frecuencias de los datos de 2010 y 2020 muestran un sesgo a la izquierda, por lo que podemos inferir que el grueso de los municipios de Oaxaca tienen poblaciones relativamente pequeñas en comparación a los mas densamente poblados. Esto también lo podemos corroborar al comparar la media con el valor máximo.
+
+
+##### 2.2.2. Datos del área urbana por municipio en Oaxaca del 2010 y 2020 segun el marco geoestadítico nacional
+
+```{r}
+#Definimos las varibles del área de los poligonos urbanos de 2010
+areaUrb10 <- dbGetQuery(con,"SELECT cve_mun, SUM(area_ha) AS area_ha FROM area_urb2010 GROUP BY cve_mun")
+
+#Definimos las varibles del área de los poligonos urbanos de 2010
+areaUrb20 <- dbGetQuery(con,"SELECT cve_mun, SUM(area_ha) AS area_ha FROM area_urb2020 GROUP BY cve_mun")
+
+#Visualizamos los datos para ver si estos son correctos o no.
+head(areaUrb10)
+head(areaUrb20)
+```
+
+**Calculamos los valores estadisticos descriptivos básicos para ambos DataFrames**
+
+```{r}
+#Llamamos a la función summary() para calcular los valores del área urbana total por municipio en 2020.
+summary(areaUrb10)
+```
+
+```{r}
+#Llamamos a la función summary() para calcular los valores del área urbana total por municipio en 2020.
+summary(areaUrb20)
+```
+
+**Vizualizamos los valores de los datos con histogramas para ver su tipo de distrubición.**
+
+```{r}
+#Histograma de distribución de la tabla área urbana total por municipio en Oaxaca en 2010
+hist(x = areaUrb10$area_ha, main = "Área Urbana por municipio en Oaxaca en 2010", 
+     xlab = "Área Urbana (Ha)", ylab = "Frecuencia",
+     col = "blue")
+```
+
+```{r}
+#Histograma de distribución de la tabla área urbana total por municipio en Oaxaca en 2020
+hist(x = areaUrb20$area_ha, main = "Área Urbana por municipio en Oaxaca en 2020", 
+     xlab = "Área Urbana (Ha)", ylab = "Frecuencia",
+     col = "black")
+```
+
+**Interpretación de los datos de población total por municipio en Oaxaca 2010 y 2020**
+
+Como ya sucedio en los gráficos de frecuencias de las variables anteriores los datos del área urbana también estan segados a la izquierda, esto nos demuestra que hay un corportamiento similar entre nuestras dos variables. En ambos casos la mayoría de los municipios tienes valores bajos en relación al máximo. Ahora queda por preguntarnos sí el crecimiento de amabas variables también tiene un conportamiento similar.
+
+#### 2.3. Creación de los DataFrame necesario para el análisis
+
+Para comenzar esta parte del ejercicio y responder a nuestras preguntas de investigación debemos crear un DataFrame que en dos variables contenga el cambio población de 2010 a 2020 y las relaciones con el cambio en el área urbana por municipio.
+
+Para poder comparar de mejor manera estas variables las dos las transformaremos a porcentajes, que describirán el cambio ocurrido de los datos de 2010 a 2020. Con este cambio podremos responder de mejor manera si existe una relación entre el crecimiento de la población (%) y el crecimiento área urbana (%)en los últimos diez años los cuales abarca nuestro estudio.
+
+Esta transformación de las variables nos permitirá trabajar con un plano bidimensional en lugar de uno tridimensional que resultaría de usar los valores absolutos de cada uno de los censos y aumentar los años del censo como tercera variable.
+
+El DataFrame que construiremos debe contener los siguiente datos por municipio:
+
+* Campos para identificar a cada uno de los municipios.
+* Aumento o disminución de la población en porcentaje con respecto a los datos de 2010.
+* Aumento o disminución de los áreas urbanas en porcentaje con respecto a los datos de 2010.
+
+Está tabla la crearemos dentro de un gestor de base de datos con lenguaje SQL donde nos será mas fácil trabajar con los datos y utilizar datos geográficos dentro de las tablas.
+
+##### 2.3.1. Construcción de la tabla en la base de datos para la corroboracion de la hipótesis
+
+**Las consultas utilizadas para la creación del DataFrame son las siguientes**
+
+/* AGRUPAR LOS DATOS DE ÁREA URBANA POR MUNICIPIO */
+
+/* contar el área total urbana por municipio */
+
+    SELECT cve_mun, SUM(area_ha) AS areatot_ha FROM area_urb2010
+    GROUP BY cve_mun ORDER BY cve_mun ASC;
+
+    SELECT cve_mun, SUM(area_ha) AS areatot_ha FROM area_urb2020
+    GROUP BY cve_mun ORDER BY cve_mun ASC;
+
+/* CREAR LA TABLA PARA COMPROVAR LA CORELACIÓN */
+
+/* calcular la columna de porcentaje de crecimiento poblacional con respecto a 2010*/
+
+    ALTER TABLE oax_pobtotmun ADD COLUMN difpob_porc decimal;
+
+    UPDATE oax_pobtotmun SET difpob_porc = (pobtot2020-pobtot2010)*100/pobtot2010;
+
+    UPDATE oax_pobtotmun SET difpob_porc = TRUNC(difpob_porc,3);
+
+    SELECT* FROM oax_pobtotmun;
+
+/* crear la tabla que contenga el nuevo dato por municipio para agregar los dos faltates
+de área urbana y numero de localidades */
+
+    CREATE TABLE regredatos_oax AS 
+    SELECT id, geom, cve_mun, nom_mun, difpob_porc FROM oax_pobtotmun;
+
+    SELECT * FROM regredatos_oax;
+
+/* crear una tabla donde esten las áreas urbanas sumadas por municipio de 2010 */
+
+    CREATE TABLE area_urb2010tot AS SELECT cve_mun, SUM(area_ha) AS areatot_ha FROM area_urb2010
+    GROUP BY cve_mun;
+
+    SELECT * FROM area_urb2010tot;
+
+/* crear una tabla donde esten las áreas urbanas sumadas por municipio de 2020 */
+
+    CREATE TABLE area_urb2020tot AS SELECT cve_mun, SUM(area_ha) AS areatot_ha20 FROM area_urb2020
+    GROUP BY cve_mun;
+
+    SELECT * FROM area_urb2020tot;
+
+/* agregar columna de diferencia de área urbana 2010 */
+
+    CREATE TABLE regredatos_urb AS SELECT rdo.*, au10.areatot_ha FROM regredatos_oax rdo
+    INNER JOIN area_urb2010tot au10 ON rdo.cve_mun = au10.cve_mun;
+
+    SELECT * FROM  regredatos_urb;
+
+/* agregar columna de diferencia de área urbana 2020 */
+
+    CREATE TABLE regredatos_urb3 AS SELECT rdo.*, au20.areatot_ha20 FROM regredatos_urb2 rdo
+    INNER JOIN area_urb2020tot au20 ON rdo.cve_mun = au20.cve_mun;
+
+    SELECT * FROM regredatos_urb3;
+
+/* calcular la columna de porcentage de crecimiento poblacional con respecto a 2010*/
+
+    ALTER TABLE regredatos_urb3 ADD COLUMN difareaurb_porc decimal;
+
+    UPDATE regredatos_urb3 SET difareaurb_porc = (areaurb_ha20-areaurb_ha10)*100/areaurb_ha10;
+
+    UPDATE regredatos_urb3 SET difareaurb_porc = TRUNC(difareaurb_porc,3);
+
+    SELECT* FROM regredatos_urb3 ORDER BY difareaurb_porc ASC;
+
+/* crear tabla en limpio para el análisis de la correlación lineal entre variables */
+
+    CREATE TABLE regredatos AS
+    SELECT id, geom, cve_mun, nom_mun, difpob_porc, difareaurb_porc 
+    FROM regredatos_conjunto;
+
+    SELECT * FROM regredatos;
+
+#### 2.4. Análisis exploratorio de los datos del DataFrame
+
+Para poder seguir con nuestro trabajo y que esté sea lo mas fácil posible es indispensable hacer un análisis exploratorio de nuestros datos (EDA). Este es un proceso consiste en entender de mejor manera el comportamiento de nuestros datos, su cuerpo, su distribución y las posibles relaciones entre variables. Dicho análisis se basa en gráficos y estadísticos que permiten explorar la distribución identificando características tales como: valores atípicos o outliers, saltos o discontinuidades, concentraciones de valores, forma de la distribución, etc. 
+
+Primero llevaremos a caso una selección de únicamente los datos que nos son relevantes para el análisis, y dejaremos fuera campos como nombre del municipio, geometría, etc. que sirven para contextualizar mejor los datos de la tabla, pero no usaremos en este ejercicio.
+
+
+**Crear un DataFrame con los datos que usaremos para el ejercicio**
+
+```{r}
+#Creación de un dataframe que una todas la variables que necesitamos para hacer la tabla de distribución
+tablaCor <- dbGetQuery(con,"SELECT cve_mun, difpob_porc, difareaurb_porc FROM regredatos")
+
+#Vizualizamos la tabla para ver su estructura
+head(tablaCor)
+```
+
+El nuevo cuerpo de datos ahora contiene las dos nuevas variables de las cuales queremos estudiar su relación y una columna que nos permite identificar a cada uno de los registros con su municipio correspondiente. Nos referiremos a está tabla como tabla de correlación a partir de ahora.
+
+**Estadística descriptiva de la muestra, cálculo de los valores estadísticos básicos**
+
+En el caso de la estadística de análisis descriptivo, este tipo de metodología proporciona un enfoque por el que se confecciona un resumen de información que dan los datos de una muestra. Es decir, su meta es hacer síntesis de la información para arrojar precisión, sencillez y aclarar y ordenar los datos. 
+
+```{r}
+#Llamamos a la función 'stat.desc(mydata)' para calcular los valores de la tabla que contiene los datos para la comprovar la hipotesis de correlacion entre variables.
+stat.desc(tablaCor)
+```
+
+En el caso de nuestra nueva tabla hay dos cosas que son particularmente importantes en nuestro cuerpo de datos que debemos analizar: 
+
+La primera es el hecho de que existan valores nulos dentro de nuestra muestra, en este caso son municipios cuya área urbana no creció nada, aunque normalmente no se suele recomendar trabajar con valores nulos los de nuestra tabla no son datos faltantes en sí, si no mas bien datos en donde nuestra variable es igual a 0 por lo qué no es ningún problema que los mantengamos en nuestra muestra. 
+
+La segunda es que hay una gran diferencia entre el valor máximo y mínimo de nuestras variables y la media, lo que nos indica la posible existencia de valores atípicos en nuestros datos.
+
+**Histograma de frecuencias de ambas variables de la taba de correlación**
+
+Aunque ya utilizamos esta herramienta antes para visualizar los primeros datos que descargamos en esta ocasión me gustaría explicar cada de los tipos de gráficos que usaremos y sus utilidades, ya que son importantes herramientas durante el EDA.
+
+El histograma de frecuencias es un gráfico básico en el análisis visual de los datos, y con el podemos evidenciar comportamientos, observar el grado de homogeneidad, acuerdo o diferencia entre los valores de todas las partes que componen la población o la muestra, o, en contraposición, poder observar el grado de variabilidad, y por ende, la dispersión de todos los valores que toman las partes.
+
+* Histograma de la variable de cambio % de la población por municipio en Oaxaca respecto al censo de 2010
+
+```{r}
+#Histograma de frecuencias y configuración
+hist(x = tablaCor$difpob_porc, main = "Cambio en el % de población por municipio en Oaxaca respecto al 2010", 
+     xlab = "Cambio % población", ylab = "Frecuencia",
+     col = "blue")
+```
+
+```{r}
+#Histograma de frecuencias y configuración
+hist(x = tablaCor$difareaurb_porc, main = "Cambio en el % área urbana por municipio en Oaxaca respecto al 2010", 
+     xlab = "Cambio % área urbana(ha)", ylab = "Frecuencia",
+     col = "black")
+```
+
+**Interpretación de los gráficos de distribución**
+
+Nuestros nuevos gráficos de distribución siguen estando sesgados a la derecha de la misma forma que lo estaban nuestros datos iniciales, pero la variable de crecimiento de población por municipio en Oaxaca muestra mas normalidad en su distribución.
+
+#### 2.5. Detección y eliminación de valores atípicos en nuestra muestra
+
+Los valores atípicos pueden ser causados por diversas razones y es deber del investigador averiguar esta información para su muestra. El como lidiar con estos datos dependerá de la pregunta de investigación, la metodología y la decisión subjetiva del investigador.
+
+En este caso los outliers no se deben a errores en la captura de los datos, puesto que estos datos ya han sido revisados y corregidos por la fuente original, sin embargo, representan anormalidades en nuestra muestra que seguramente se deben a variables que no contemplamos en este análisis, por ello en este caso decidimos eliminarlos con el fin de que el análisis sea solo con el grueso de los datos que están mas cercanos a la media. Aunque es importante mencionar que está no es una buena manera de lidiar con ellos y lo mejor es probar otras aproximaciones o variables que describan mejor el fenómeno que estamos estudiando.  
+ 
+* Valores atípicos
+
+En estadística, un valor atípico (en inglés outlier) es una observación que es numéricamente distante del resto de los datos. Las estadísticas derivadas de los conjuntos de datos que incluyen valores atípicos serán frecuentemente engañosas.
+
+* Lidiar con valores atípicos
+
+Los outliers o valores atípicos los podemos categorizar en dos grupos, los valores atípicos leves y los valores atipicos extremos. La forma de calcular estos valores es a partir su relación con el valor del primer cuartil (Q1) y el tercer cuartil (Q3) y el rango intercuatílico el cual es la diferencia entre estos dos valores.
+
+Rango en el que se encuentran los valores atípicos leves:
+
+${min = Q1 - 1.5(RI)}$ 
+    
+${max = Q3 + 1.5(RI)}$
+
+Rango en el que se encuantran los valores atípicos extremos:
+    
+${min = Q1 - 3*(RI)}$
+
+${max = Q3 + 3*(RI})$
+
+Para calcular el RI o rango intercuatílico usaremos la siguiente formula:
+
+${RI = Q3 - Q1}$
+
+##### 2.5.1. Identificar valores atípicos mediante gráficos
+
+Como ya intuíamos mediante los gráficos de frecuencias contamos con varios valores atípicos que pueden afectar a nuestro estudio de forma negativa, por lo que es importante tratar los datos para sacarlos de nuestra muestra. A grandes rasgos hay dos maneras de lidiar con ellos: eliminarlos o cambiar su valor por uno que no se atípico. Nosotros los eliminaremos.
+
+Para la identificación de los outliers hay varios tipos de datos que nos sirven, pero los mas usados y los mas comunes son:
+
+* Boxplot: Este tipo de gráfico nos permite identificar valores atípicos y comparar distribuciones. Además de conocer de una forma cómoda y rápida como se distribuyen los datos con respecto a la mediana.
+
+* Diagrama de dispersión: Un diagrama de dispersión o gráfica de dispersión o gráfico de burbujas es un tipo de diagrama matemático que utiliza las coordenadas cartesianas para mostrar los valores de dos variables para un conjunto de datos, este es utilizado principalmente para visualizar el tipo de relación entre nuestras variables, pero puede ser usado para identificar outliers también.
+
+**Boxplot del cambio en % de la población por municipio en Oaxaca respecto al censo de 2010**
+```{r}
+#Grafico de boxplot y configuración
+boxplot(x = tablaCor$difpob_porc,
+    xlab = "Cambio % en poblacion", ylab = "Porcentage", 
+    col = "orange",
+    main = "Cambio % de población por Municipio con respecto al 2010",
+     horizontal = TRUE
+)
+```
+
+**Boxplot del cambio en % del área urbana por municipio en Oaxaca respecto al censo de 2010**
+```{r}
+#Grafico de boxplot y configuración
+boxplot(x = tablaCor$difareaurb_porc,
+    xlab = "Cambio % area urbana (Ha)", ylab = "Porcentage", 
+    col = "green",
+    main = "Cambio % del area urbana por municipio con respecto al 2010",
+    horizontal = TRUE
+)
+```
+
+**Interpretación de ambos BoxPlots**
+
+Los dos Boxplots nos dejan ver claramente que ambas variables tienen valores atípicos, pero especialmente la de cambio en el porcentaje de área urbana por municipio. Usaremos ahora un diagrama de dispersión para visualizar estos valores atípicos con otra herramienta.
+
+**Diagrama de dispersión de la variable cambio % de población y cambio % del área urbana (Ha) respecto al 2010 por municipio en Oaxaca**
+
+```{r}
+#Diagrama de dispersion y configuración
+plot(x=tablaCor$difpob_porc, y=tablaCor$difareaurb_porc,
+    xlab = "Cambio % en población", ylab = "Cambio % area urbana (Ha)", 
+    col = "red",
+    main = "Relación entre las variables por municipio en Oaxaca")
+```
+
+**Interpretación del diagrama de dispersión**
+
+En nuestro caso nos este gráfico nos resulta especialmente útil, ya que nos confirma que existen estos valores atípicos en nuestra muestra y además nos deja ver que posiblemente hay una correlación lineal entre nuestras variables, pero solo lo sabremos si eliminamos estos outliers. Para hacer esto seguiremos los pasos de la siguiente sección.
+
+##### 2.5.2. Definición de los rangos para eliminar de los outliers del Dataframe
+
+```{r}
+#Usamos la función summary para ver los rangos en los que se situan los valores atípicos
+summary(tablaCor)
+```
+
+* Los rangos van de -3.107 (Q1) a 10.824 (Q3) para la variable de cambio % de población respecto a 2010
+* Los rangos van de 0.004 (Q1) a 15.323 (Q3) para la variable de cambio % de área urbana respecto a 2010
+
+```{r}
+#Cuartiles y rango intencuartilico de la variable difpob_porc
+pobQ1 <- -3.107
+pobQ3 <- 10.824
+pobRI <- pobQ3-pobQ1
+
+#Definicion de las variables que delimitan el rango de para detectar los valores atipicos extremos de difpob_porc
+pobMinVal <- pobQ1-1.5*pobRI
+pobMaxVal <- pobQ3+1.5*pobRI
+
+#Cuartiles y rango intencuartilico de la variable difareaurb_porc
+aUrbQ1 <- 0.004
+aUrbQ3 <-15.323
+aUrbRI <- pobQ3-pobQ1
+
+#Definicion de las variables que delimitan el rango de para detectar los valores atipicos extremos de difareaurb_porc
+aUrbMinVal = aUrbQ1-1.5*aUrbRI
+aUrbMaxVal = aUrbQ3+1.5*aUrbRI
+```
+
+```{r}
+#Rango máximo y minimo para la variable de cambio el % de pobación
+pobMaxVal
+pobMinVal
+pobRI
+```
+
+```{r}
+#Rango máximo y minimo para la variable de cambio el % de area urbana
+aUrbMaxVal
+aUrbMinVal
+aUrbRI
+```
+
+**Eliminamos los oitliers creando un nuevo Dataframe**
+
+```{r}
+#Eliminar los outliners de la nuestro data frame.
+
+#Eliminamos los datos que estan en el rango de los valores atipicos leves y extremos del campo de difpob_porc
+datosReg1 = subset(tablaCor, difpob_porc>pobMinVal & difpob_porc<pobMaxVal)
+datosReg = subset(datosReg1, difareaurb_porc>aUrbMinVal & difareaurb_porc<aUrbMaxVal)
+```
+
+**Visualización del DataFrame sin outliers y de calculos de los valores estadísticos descriptivos básicos**
+
+```{r}
+#Vizualizamos el DataFrame para ver que contengo los datos necesarios
+head(datosReg)
+```
+
+```{r}
+#Vizualizacion de los valores de estadisticos descriptivos basicos del nuevo DataFrame
+summary(datosReg)
+```
+
+**Interpretación de la nueva muestra de datos**
+
+Es evidente que hemos logrado lo que queríamos, podemos observar que la media, los valores máximos y los valores mínimos están mucho mas cerca que antes y ninguno excede el rango que delimitamos para eliminar valores atípicos. Aunque también hemos tenido una reducción de 101 registros.
+
+##### 2.5.3. Visualización e interpretación del nuevo cuerpo de datos**
+
+**Boxplot**
+
+```{r}
+#Grafico de boxplot y configuración
+boxplot(x = datosReg$difpob_porc,
+    xlab = "Cambio % en poblacion", ylab = "Porcentage", 
+    col = "grey",
+    main = "Cambio % de población por Municipio con respecto al 2010",
+     horizontal = TRUE
+)
+```
+
+```{r}
+#Grafico de boxplot y configuración
+boxplot(x = datosReg$difareaurb_porc,
+    xlab = "Cambio % area urbana (Ha)", ylab = "Porcentage", 
+    col = "red",
+    main = "Cambio % del area urbana por municipio con respecto al 2010",
+    horizontal = TRUE
+)
+```
+
+**Interpretación de los Boxplot nuevos**
+
+Ambos gráficos nos corroboran que los valores atípicos se han reducido considerablemente y ahora la muestra de datos es muchos mas homogenea que antes.
+
+**Histograma de Frecuencias**
+```{r}
+#Histograma de frecuencias y configuración
+hist(x = datosReg$difpob_porc, main = "Cambio en la población por municipio en Oaxaca respecto al 2010", 
+     xlab = "Cambio % población", ylab = "Frecuencia",
+     col = "blue"
+     )
+```
+
+```{r}
+#Histograma de frecuencias y configuración
+hist(x = datosReg$difareaurb_porc, main = "Cambio en el área urbana por municipio en Oaxaca respecto al 2010", 
+     xlab = "Cambio % área urbana(ha)", ylab = "Frecuencia",
+     col = "black"
+     )
+```
+
+**Interpretación de los nuevos histogramas**
+
+También podemos ver que las distribuciones de nuestros datos son mas normales que antes, por lo qué la posibilidad de encontrar un correlación lineal entre nuestras variables es mayor que antes.
+
+**Diagrama de dispersión**
+```{r}
+#Diagrama de dispersion y configuración
+plot(x=datosReg$difpob_porc, y=datosReg$difareaurb_porc,
+    xlab = "Cambio % en población", ylab = "Cambio % área urbana (Ha)", 
+    col = "red",
+    main = "Relación entre las variables por municipio en Oaxaca"
+    )
+```
+
+**Interpretación de el nuevo diagrama de dispersión**
+
+El nuevo diagrama de dispersión no es alentador para nuestra hipótesis ya que los datos se muestran dispersos de tal forma que la posible correlación lineal entre variables será poco explicativa para nuestros datos, sin embargo, esto no lo podemos corroborar hasta no calcular el coeficiente de correlación de Pearson entre ambas variables, y saber de forma exacta que tan linealmente relacionadas están. 
+
+#### 2.6. Calculo del coeficiente de correlación de Pearson
+
+En estadística, el coeficiente de correlación de Pearson es una medida de dependencia lineal entre dos variables aleatorias cuantitativas. A diferencia de la covarianza, la correlación de Pearson es independiente de la escala de medida de las variables.
+
+De manera menos formal, podemos definir el coeficiente de correlación de Pearson como un índice que puede utilizarse para medir el grado de relación de dos variables siempre y cuando ambas sean cuantitativas y continuas.
+
+\begin{equation} 
+r = frac{Nsum{XY}-(sum{X}sum{Y})}{sqrt{ [N sum{x^2}-(sum{x})^2 ][N sum{y^2}-(sum{y})^2 }]} 
+\end{equation}
+
+
+Para calcular el coeficiente de correlación utilizaremos el paquete psych que nos proporciona algunas herramientas para hacer esto de forma sencilla.
+
+```{r}
+#Eliminamos la primera columna para hacer el nuevo gráfico
+datosCoef <- select(datosReg,difpob_porc, difareaurb_porc)
+```
+
+**Llamamos del paquete psych la función que gráfica esta relación**
+
+```{r}
+#Coeficiente de correlación
+pairs.panels(datosCoef)
+```
+
+**Guardar el coeficiente en una sola variable**
+
+```{r}
+#Uso de la función cor de la libreria MASS
+cor(x = datosReg$difpob_porc, y = datosReg$difareaurb_porc) 
+```
+
+##### 2.6.1 Interpretación de los resultados
+
+Debido a que el coeficiente de correlación es muy bajo (0.20 de 1) queda demostrado que la correlación lineal entre datos es muy débil o no existe, incluso habiendo quitado los outliers de nuestro conjunto la correlación entre el porcentaje de crecimiento de la población y el crecimiento del área urbana en nuestro caso de estudio no es lo suficientemente fuerte como para que sea un factor a tomar en cuenta por lo que nuestra hipótesis queda descartada. 
+
+Aun así, continuaremos con el ejercicio a modo de práctica para crear el modelo que pueda predecir el comportamiento de nuestros datos, pero se debe saber que este modelo no suele ser muy preciso cuando el coeficiente de correlación tiene un valor tan bajo como el obtenido.
+
+#### 2.7. Modelo de regresión Lineal
+
+Continuando con lo que resta del ejercicio pretenderemos que la correlación lineal entre nuestras variables es lo suficientemente fuerte como para ser un factor a tomar en cuenta, un paso a siguiente sería utilizar un modelo estadístico que nos ayude a reproducir está relación entre variables con el fin de predecir valores.
+
+Para esto podemos utilizar la regresión lineal la cual es un método estadístico que trata de modelar la relación entre una variable continua y una o más variables independientes mediante el ajuste de una ecuación lineal. Se llama regresión lineal simple cuando solo hay una variable independiente y regresión lineal múltiple cuando hay más de una. Dependiendo del contexto, a la variable modelada se le conoce como variable dependiente o variable respuesta, y a las variables independientes como regresores, predictores o features.
+
+* Regresión lineal simple
+
+Este modelo sólo está conformado por dos variables estadísticas llamadas ${\displaystyle X}$ y ${\displaystyle Y}$. Para la regresión lineal simple, se asume que ${\displaystyle X}$ y ${\displaystyle Y}$ se relacionan mediante la relación funcional
+
+\begin{equation}
+{Y}_i = {\beta}_0 + {\beta}_1 X_i + {\epsilon}_i
+\end{equation}
+
+**Creamos el modelo e ingresamos nuestras datos dentro para entrenarlo**
+
+```{r}
+#Regresión lineal en R
+?lm
+modelo <- lm(datosReg$difareaurb_porc~datosReg$difpob_porc)
+
+#Vizualización de los datos del modelo
+summary(modelo)
+```
+
+**Coeficiontes de la regresion**
+
+```{r}
+modelo$coefficients
+```
+
+
+##### 2.7.1. Calculo del error del modelo de regresión
+
+El Error Cuadrático Medio es el criterio de evaluación más usado para problemas de regresión. Se usa sobre todo cuando usamos aprendizaje automático supervisado. Para cada dato histórico podremos indicar el resultado correcto.
+
+```{r}
+#Calcular el error cuadratico medio o MSE
+modeloMSE <- mean(modelo$residuals^2)
+modeloMSE
+```
+
+```{r}
+#Calcular la raíz del error cuadratico medio o RMSE
+modeloRMSE <- sqrt(modeloMSE)
+modeloRMSE
+```
+
+##### 2.7.2. Vizualización del modelo de regresión
+
+```{r}
+#Visualización de la línea de regresión lineal en nuestro diagrama de disperción
+plot(datosReg$difareaurb_porc~datosReg$difpob_porc,
+    xlab = "Cambio % en población", ylab = "Cambio % área urbana (Ha)", 
+    col = "grey",
+    main = "Modelo de regresión Lineal")
+abline(modelo, col= 'black' )
+```
+
+**Interpretación del modelo de regresión lineal**
+
+Nuestro modelo de regresión nos arroja un error medio muy alto, cosa que podemos ver en la gráfica de dispersión, la línea que dibuja la función de regresión dista de muchos puntos en el plano. Como ya predecíamos este modelo no nos es útil para predecir el comportamiento de nuestra variable de crecimiento del área urbana.
+
+### 3. Conclusiones
+
+Finalmente queda demostrado que nuestra hipótesis inicial no es correcta y que el crecimiento de la población no esta relacionado con el crecimiento del área urbana de forma lineal. Esto puede ser porqué ambas variables describen fenomenos tan que se ven afectados por muchos otros factores además de los que analizamos. Sabemos que los fenomenos demográficos de cualquier territorio son siempre complejos y es difícil encontrar con correlaciones que se puedan explicar de forma lineal.
+
+También sabemos que el modelo lineal es tal vez la forma mas sencilla en la que se pueden relacionar dos variables y por la tanto es su utilidad tiene limitaciones importantes a la hora describir la realidad, pero este ejercicio nos ha dejado ver como aplicar y desarrollar una investigación desde el análisis cuantitativo y para ello aprendimos la utilidad de algunas herramientas y conceptos de la estadística y sus limitaciones a la hora de ser aplicadas. 
+
+El que nuestra hipótesis sea negativa invita a explorar nuevas aproximaciones a este problema, por ejemplo, si hubiéramos trabajado a escala nacional ¿Los resultados serian similares? ¿Que otras variables podríamos agregar a nuestro modelo que ayuden a encontrar relaciones mas fuertes? ¿Que pasaría si ampliamos el periodo de tiempo de nuestro estudio? ¿Si no es el crecimiento de la población la que afecta al crecimiento del área urbana por que razones está aunmenta?. Estas preguntas son consecuencia de entender de mejor manera las herramientas de análisis que tenemos disponibles y plantearse otras formas de aproximarse a la cuestión.
+
+### 4. Bibliografía
+
+* INEGI (2010), [Marco Geoestadístico 2010 versión 4.3 (Censo de Población y Vivienda 2010)
+]. Recuperado de: https://www.inegi.org.mx/app/biblioteca/ficha.html?upc=702825296520
+
+* INEGI (2020), [Marco Geoestadístico. Censo de Población y Vivienda 2020]. Recuperado de: https://www.inegi.org.mx/app/biblioteca/ficha.html?upc=889463807469
+
+* INEGI (2010), [Censo de Población y Vivienda 2010]. Recuperado de: https://www.inegi.org.mx/programas/ccpv/2010/
+
+* INEGI (2020), [Censo de Población y Vivienda 2020]. Recuperdo de: https://www.inegi.org.mx/programas/ccpv/2020/#Microdatos
+
+* Banco Mundial (2019), [Crecimiento de la población urbana (% anual) - México]. Recuperado de: https://datos.bancomundial.org/indicador/SP.URB.GROW?end=2019&locations=MX&start=1961&view=chart
+
+* CONAPO (2020), [Indicadores demográficos de la República Mexicana, en el año 2020]. Recuperado de: http://www.conapo.gob.mx/work/models/CONAPO/Mapa_Ind_Dem18/index_2.html
+
